@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Streamer {
+  id                Int       @id @default(autoincrement())
+  steamAccountId    BigInt    @unique
+  displayName       String?
+  twitchId          String?   @map("twitch_id")
+  youtubeChannelId  String?   @map("youtube_channel_id") @db.VarChar(100)
+  kickUsername      String?   @map("kick_username") @db.VarChar(100)
+  trovoUsername     String?   @db.VarChar(100)
+  facebookPageId    String?   @map("facebook_page_id") @db.VarChar(100)
+  tiktokUsername    String?   @db.VarChar(100)
+  verified          Boolean   @default(false)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  
+  clips            Clip[]
+  
+  @@map("streamers")
+}
+
+model Match {
+  id              Int       @id @default(autoincrement())
+  matchId         BigInt    @unique @map("match_id")
+  startTime       DateTime  @map("start_time")
+  durationSeconds Int?      @map("duration_seconds")
+  gameMode        Int?      @map("game_mode")
+  radiantWin      Boolean?  @map("radiant_win")
+  avgRank         Int?      @map("avg_rank")
+  processed       Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  events          Event[]
+  
+  @@index([processed])
+  @@map("matches")
+}
+
+model Event {
+  id              Int      @id @default(autoincrement())
+  matchId         BigInt   @map("match_id")
+  eventType       String   @map("event_type") @db.VarChar(50)
+  gameTimeSec     Int      @map("game_time_sec")
+  playerSteamId   BigInt   @map("player_steam_id")
+  victimSteamId   BigInt?  @map("victim_steam_id")
+  heroId          Int?     @map("hero_id")
+  contextJson     Json?    @map("context_json")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  match           Match    @relation(fields: [matchId], references: [matchId], onDelete: Cascade)
+  clips           Clip[]
+  
+  @@index([matchId])
+  @@index([playerSteamId])
+  @@index([eventType])
+  @@map("events")
+}
+
+model Clip {
+  id              Int      @id @default(autoincrement())
+  eventId         Int      @map("event_id")
+  streamerId      Int      @map("streamer_id")
+  platform        String   @db.VarChar(20)
+  clipUrl         String   @map("clip_url") @db.Text
+  embedUrl        String?  @map("embed_url") @db.Text
+  thumbnailUrl    String?  @map("thumbnail_url") @db.Text
+  durationSec     Int?     @map("duration_sec")
+  clipTitle       String?  @map("clip_title") @db.VarChar(500)
+  platformClipId  String?  @map("platform_clip_id") @db.VarChar(200)
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  streamer        Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([streamerId])
+  @@index([platform])
+  @@map("clips")
+}
+
+model User {
+  id                Int      @id @default(autoincrement())
+  steamAccountId    BigInt   @unique @map("steam_account_id")
+  displayName       String?  @db.VarChar(255)
+  notificationPrefs Json?    @default("{}") @map("notification_prefs")
+  createdAt         DateTime @default(now()) @map("created_at")
+  
+  @@map("users")
+}
