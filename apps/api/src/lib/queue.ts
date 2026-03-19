@@ -1,4 +1,4 @@
-import { Queue, Worker } from 'bullmq'
+import { Queue, Worker, Job } from 'bullmq'
 import IORedis from 'ioredis'
 import { logger } from './logger'
 
@@ -22,7 +22,7 @@ export const notificationQueue = new Queue(QUEUES.NOTIFICATION, { connection })
 
 export function createWorker<T>(
   queueName: string,
-  processor: (job: { data: T }) => Promise<void>
+  processor: (job: Job<T>) => Promise<void>
 ): Worker<T> {
   return new Worker<T>(
     queueName,
