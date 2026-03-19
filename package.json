@@ -4,10 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@dota-replay/api",
+    "dev:web": "turbo run dev --filter=@dota-replay/web",
+    "dev:worker": "pnpm --filter @dota-replay/api run dev:worker",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "pnpm --filter @dota-replay/db run db:generate",
+    "db:push": "pnpm --filter @dota-replay/db run db:push",
+    "db:migrate": "pnpm --filter @dota-replay/db run db:migrate",
+    "db:studio": "pnpm --filter @dota-replay/db run db:studio"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
