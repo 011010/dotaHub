@@ -1,5 +1,5 @@
 import { BaseApiClient, ApiClientConfig } from './base'
-import type { OpenDotaMatch } from '@dota-replay/types'
+import type { OpenDotaMatch, OpenDotaMatchFull } from '@dota-replay/types'
 
 const OPENDOTA_BASE_URL = 'https://api.opendota.com/api'
 
@@ -14,6 +14,10 @@ export class OpenDotaClient extends BaseApiClient {
 
   async getMatch(matchId: bigint): Promise<OpenDotaMatch> {
     return this.request<OpenDotaMatch>(`/matches/${matchId}`)
+  }
+
+  async getMatchFull(matchId: bigint): Promise<OpenDotaMatchFull> {
+    return this.request<OpenDotaMatchFull>(`/matches/${matchId}`)
   }
 
   async getPlayerRecentMatches(accountId: bigint): Promise<OpenDotaMatch[]> {
