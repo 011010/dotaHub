@@ -3,18 +3,153 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 0, 0, 0;
+html,
+body {
+  background-color: #050407;
+  color: #f5f5f5;
+  min-height: 100%;
+}
+
+/* Drives orb travel along the elliptical sigil path */
+@keyframes orbit-path {
+  to {
+    offset-distance: 100%;
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+/* Quas — frost particles drift downward off the orb */
+@keyframes orb-frost-fall {
+  0%   { transform: translate(0, -6px) scale(0.6); opacity: 0; }
+  20%  { opacity: 0.95; }
+  100% { transform: translate(var(--tx, 4px), 42px) scale(0.4); opacity: 0; }
+}
+
+/* Wex — sparks dart outward in a burst */
+@keyframes orb-spark-burst {
+  0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  15%  { transform: translate(calc(var(--tx, 0px) * 0.3), calc(var(--ty, 0px) * 0.3)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(0); opacity: 0; }
+}
+
+/* Exort — embers rise upward off the orb */
+@keyframes orb-ember-up {
+  0%   { transform: translate(0, 8px) scale(0.5); opacity: 0; }
+  20%  { opacity: 0.95; }
+  100% { transform: translate(var(--tx, -3px), -46px) scale(0.3); opacity: 0; }
+}
+
+/* Wex arc flicker — pure opacity flicker, transform stays static (set via inline style) */
+@keyframes orb-arc-flicker {
+  0%, 100% { opacity: 0; }
+  10%      { opacity: 1; }
+  18%      { opacity: 0.15; }
+  30%      { opacity: 0.85; }
+  42%      { opacity: 0; }
+}
+
+/* Exort flame aura — morphing blob shape */
+@keyframes orb-flame-morph {
+  0%, 100% { border-radius: 48% 52% 50% 50% / 50% 55% 45% 50%; transform: scale(1) rotate(0deg); }
+  33%      { border-radius: 56% 44% 53% 47% / 48% 52% 48% 52%; transform: scale(1.08) rotate(5deg); }
+  66%      { border-radius: 44% 56% 47% 53% / 53% 47% 53% 47%; transform: scale(0.94) rotate(-4deg); }
+}
+
+/* Invocation shockwave — expands outward from center */
+@keyframes orb-shockwave {
+  0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+
+/* Element replace — orb collapses then re-emerges, masking the gradient swap */
+@keyframes orb-replace {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.35); }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* === Chaos background effects === */
+
+/* Lightning — stays invisible (opacity 0) until the brief flash window */
+@keyframes lightning-flash {
+  0%, 91%  { opacity: 0; }
+  92%      { opacity: 1; }
+  93%      { opacity: 0.1; }
+  94.5%    { opacity: 1; }
+  96%      { opacity: 0.05; }
+  97.5%    { opacity: 0.8; }
+  100%     { opacity: 0; }
+}
+
+/* Plasma blob — orbs morph shape so they don't look like perfect spheres */
+@keyframes plasma-morph {
+  0%   { border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%; }
+  16%  { border-radius: 62% 38% 54% 46% / 44% 58% 42% 56%; }
+  33%  { border-radius: 42% 58% 46% 54% / 56% 44% 58% 42%; }
+  50%  { border-radius: 57% 43% 61% 39% / 45% 55% 43% 57%; }
+  66%  { border-radius: 43% 57% 38% 62% / 59% 41% 57% 43%; }
+  83%  { border-radius: 59% 41% 52% 48% / 41% 59% 49% 51%; }
+  100% { border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%; }
+}
+
+/* Tornado / vortex — continuous rotation of inner conic gradient */
+@keyframes tornado-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Plasma / fire explosion — quick burst that takes most of the cycle to recharge */
+@keyframes plasma-burst {
+  0%, 70% { transform: scale(0); opacity: 0; }
+  76%     { transform: scale(0.6); opacity: 0.95; }
+  85%     { transform: scale(1.4); opacity: 0.7; }
+  100%    { transform: scale(2.6); opacity: 0; }
+}
+
+/* SVG noise grain — applied as an overlay to add film texture */
+.bg-grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+}
+
+/* Quas — ice/blue orb */
+.orb-quas {
+  background:
+    radial-gradient(circle at 35% 30%, #d8f3ff 0%, #4cc9ff 28%, #1a78c2 60%, #0b3a66 90%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.15), transparent 60%);
+  box-shadow:
+    inset -10px -14px 30px rgba(0, 20, 50, 0.55),
+    inset 8px 10px 20px rgba(255, 255, 255, 0.2),
+    0 0 30px rgba(76, 201, 255, 0.55),
+    0 0 70px rgba(76, 201, 255, 0.35),
+    0 0 140px rgba(76, 201, 255, 0.25);
+}
+
+/* Wex — storm/violet orb */
+.orb-wex {
+  background:
+    radial-gradient(circle at 35% 30%, #f0e0ff 0%, #b066ff 30%, #6e25c8 62%, #2a0a55 92%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.12), transparent 60%);
+  box-shadow:
+    inset -10px -14px 30px rgba(30, 0, 60, 0.6),
+    inset 8px 10px 20px rgba(255, 255, 255, 0.18),
+    0 0 30px rgba(176, 102, 255, 0.55),
+    0 0 70px rgba(176, 102, 255, 0.35),
+    0 0 140px rgba(176, 102, 255, 0.25);
+}
+
+/* Exort — fire/orange orb */
+.orb-exort {
+  background:
+    radial-gradient(circle at 35% 30%, #fff2d4 0%, #ffb056 25%, #ff7a1a 55%, #7a2305 92%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.18), transparent 60%);
+  box-shadow:
+    inset -10px -14px 30px rgba(60, 10, 0, 0.6),
+    inset 8px 10px 20px rgba(255, 240, 200, 0.25),
+    0 0 30px rgba(255, 122, 26, 0.6),
+    0 0 70px rgba(255, 122, 26, 0.4),
+    0 0 140px rgba(255, 90, 26, 0.28);
 }
