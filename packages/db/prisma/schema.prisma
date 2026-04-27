@@ -85,11 +85,26 @@ model Clip {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  steamAccountId    BigInt   @unique @map("steam_account_id")
-  displayName       String?  @db.VarChar(255)
-  notificationPrefs Json?    @default("{}") @map("notification_prefs")
-  createdAt         DateTime @default(now()) @map("created_at")
-  
+  id                Int                @id @default(autoincrement())
+  steamAccountId    BigInt             @unique @map("steam_account_id")
+  displayName       String?            @db.VarChar(255)
+  notificationPrefs Json?              @default("{}") @map("notification_prefs")
+  createdAt         DateTime           @default(now()) @map("created_at")
+
+  pushSubscriptions PushSubscription[]
+
   @@map("users")
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  endpoint  String   @unique @db.Text
+  p256dh    String   @db.Text
+  auth      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }
