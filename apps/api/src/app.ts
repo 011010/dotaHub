@@ -1,4 +1,4 @@
-import Fastify from 'fastify'
+import Fastify, { type FastifyBaseLogger } from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import { logger } from './lib/logger'
@@ -6,7 +6,7 @@ import routes from './routes'
 
 export async function buildApp() {
   const app = Fastify({
-    logger,
+    logger: logger as unknown as FastifyBaseLogger,
   })
 
   await app.register(helmet)
