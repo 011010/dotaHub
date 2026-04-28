@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AuthButton } from './AuthButton'
+import { NotificationButton } from './NotificationButton'
 
 export function SiteHeader() {
   return (
@@ -20,6 +21,7 @@ export function SiteHeader() {
         <Link href="/streamers" className="transition-colors hover:text-white">
           Streamers
         </Link>
+        <NotificationButton />
         <AuthButton />
       </nav>
     </header>

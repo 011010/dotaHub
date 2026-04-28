@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Cinzel } from 'next/font/google'
 import './globals.css'
+import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -27,7 +28,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${cinzel.variable}`}>
-      <body className="font-sans bg-black text-white antialiased">{children}</body>
+      <body className="font-sans bg-black text-white antialiased">
+        <ServiceWorkerRegistrar />
+        {children}
+      </body>
     </html>
   )
 }
