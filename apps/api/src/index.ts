@@ -1,4 +1,6 @@
 import 'dotenv/config'
+// BigInt fields (matchId, steamAccountId) must serialize as strings
+;(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () { return this.toString() }
 import { buildApp } from './app'
 import { logger } from './lib/logger'
 

@@ -1,4 +1,5 @@
 import 'dotenv/config'
+;(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () { return this.toString() }
 import { startWorkers } from './workers'
 import { logger } from './lib/logger'
 
