@@ -2,8 +2,11 @@ import { Job } from 'bullmq'
 import { db } from '@dota-replay/db'
 import { OpenDotaClient } from '@dota-replay/dota-api'
 import { logger } from '../lib/logger'
+import { eventExtractQueue } from '../lib/queue'
 
-const openDota = new OpenDotaClient()
+const openDota = new OpenDotaClient({
+  apiKey: process.env.OPENDOTA_API_KEY,
+})
 
 export interface MatchIngestJobData {
   matchId: bigint
@@ -38,4 +41,7 @@ export async function processMatch(job: Job<MatchIngestJobData>): Promise<void> 
   })
 
   logger.info({ matchId: matchId.toString() }, 'Match ingested successfully')
+
+  await eventExtractQueue.add('event:extract', { matchId: matchId.toString() })
+  logger.info({ matchId: matchId.toString() }, 'Queued event:extract job')
 }
