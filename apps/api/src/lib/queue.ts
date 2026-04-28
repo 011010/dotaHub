@@ -9,16 +9,16 @@ export const connection = new IORedis(REDIS_URL, {
 })
 
 export const QUEUES = {
-  MATCH_INGEST: 'match:ingest',
-  EVENT_EXTRACT: 'event:extract',
-  CLIP_CREATE: 'clip:create',
-  NOTIFICATION: 'notification:send',
+  MATCH_INGEST:  'match_ingest',
+  EVENT_EXTRACT: 'event_extract',
+  CLIP_CREATE:   'clip_create',
+  NOTIFICATION:  'notification_send',
 } as const
 
-export const matchIngestQueue = new Queue(QUEUES.MATCH_INGEST, { connection })
+export const matchIngestQueue  = new Queue(QUEUES.MATCH_INGEST,  { connection })
 export const eventExtractQueue = new Queue(QUEUES.EVENT_EXTRACT, { connection })
-export const clipCreateQueue = new Queue(QUEUES.CLIP_CREATE, { connection })
-export const notificationQueue = new Queue(QUEUES.NOTIFICATION, { connection })
+export const clipCreateQueue   = new Queue(QUEUES.CLIP_CREATE,   { connection })
+export const notificationQueue = new Queue(QUEUES.NOTIFICATION,  { connection })
 
 export function createWorker<T>(
   queueName: string,

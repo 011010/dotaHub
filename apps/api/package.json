@@ -16,7 +16,7 @@
     "@dota-replay/dota-api": "workspace:*",
     "@dota-replay/types": "workspace:*",
     "@fastify/cors": "^9.0.0",
-    "@fastify/helmet": "^13.0.0",
+    "@fastify/helmet": "^11.1.1",
     "bullmq": "^5.1.0",
     "dotenv": "^16.4.0",
     "fastify": "^4.26.0",
