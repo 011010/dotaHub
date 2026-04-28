@@ -21,6 +21,11 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit, timeo
     })
     if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`)
     return response.json()
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('API unreachable — make sure the server is running')
+    }
+    throw err
   } finally {
     clearTimeout(timer)
   }

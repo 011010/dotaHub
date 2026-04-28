@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { SiteHeader } from '@/components/SiteHeader'
 import { api } from '@/lib/api'
 
@@ -68,7 +69,8 @@ function StreamerCard({ streamer }: { streamer: StreamerRecord }) {
   const name = streamer.displayName ?? `Streamer #${streamer.id}`
 
   return (
-    <div
+    <Link
+      href={`/streamers/${streamer.steamAccountId}`}
       className="group relative flex flex-col overflow-hidden border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06]"
       style={{ '--accent': accentColor } as React.CSSProperties}
     >
@@ -133,7 +135,7 @@ function StreamerCard({ streamer }: { streamer: StreamerRecord }) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
