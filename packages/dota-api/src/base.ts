@@ -19,7 +19,7 @@ export class BaseApiClient {
     endpoint: string,
     options?: RequestInit
   ): Promise<T> {
-    const url = new URL(endpoint, this.baseUrl)
+    const url = new URL(`${this.baseUrl}${endpoint}`)
     
     if (this.apiKey) {
       url.searchParams.set('api_key', this.apiKey)

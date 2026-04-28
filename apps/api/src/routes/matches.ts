@@ -45,7 +45,7 @@ export default async function matchesRoutes(app: FastifyInstance) {
       return reply.status(409).send({ error: 'Match already processed' })
     }
 
-    await matchIngestQueue.add('match:ingest', { matchId: id })
+    await matchIngestQueue.add('match:ingest', { matchId: matchId })
     return reply.status(202).send({ queued: true, matchId: matchId })
   })
 }
