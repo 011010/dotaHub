@@ -33,10 +33,23 @@ export default async function streamersRoutes(app: FastifyInstance) {
 
   app.get('/:steamId', async (request, reply) => {
     const { steamId } = request.params as { steamId: string }
-    
+
+    let steamAccountId: bigint
+    try {
+      steamAccountId = BigInt(steamId)
+    } catch {
+      return reply.status(400).send({ error: 'Invalid steamId' })
+    }
+
     const streamer = await db.streamer.findUnique({
-      where: { steamAccountId: BigInt(steamId) },
-      include: { clips: true },
+      where: { steamAccountId },
+      include: {
+        clips: {
+          include: { event: true },
+          orderBy: { createdAt: 'desc' },
+          take: 60,
+        },
+      },
     })
 
     if (!streamer) {
