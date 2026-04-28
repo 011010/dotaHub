@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SiteHeader } from '@/components/SiteHeader'
 
@@ -15,11 +16,35 @@ const ERROR_MESSAGES: Record<string, string> = {
   auth_failed: 'Steam authentication failed. Please try again.',
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams()
   const error        = searchParams.get('error')
   const errorMessage = error ? (ERROR_MESSAGES[error] ?? 'Something went wrong. Please try again.') : null
 
+  return (
+    <>
+      {errorMessage && (
+        <div className="mb-6 border border-red-400/20 bg-red-400/5 px-4 py-3 text-sm text-red-400 text-center">
+          {errorMessage}
+        </div>
+      )}
+
+      <a
+        href={`${API_BASE}/auth/steam`}
+        className="group flex w-full items-center justify-center gap-3 border border-white/15 bg-white/[0.04] px-8 py-4 backdrop-blur-sm transition-all hover:border-white/35 hover:bg-white/[0.08]"
+      >
+        <span className="text-[#4c9be8] transition-colors group-hover:text-[#71b8ff]">
+          {STEAM_SVG}
+        </span>
+        <span className="font-display text-sm uppercase tracking-[0.35em] text-white/80 group-hover:text-white">
+          Continue with Steam
+        </span>
+      </a>
+    </>
+  )
+}
+
+export default function LoginPage() {
   return (
     <div className="relative min-h-screen">
       <div
@@ -35,7 +60,6 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center px-6 pb-24">
           <div className="w-full max-w-sm">
 
-            {/* Heading */}
             <div className="mb-10 text-center">
               <p className="mb-2 text-[10px] uppercase tracking-[0.5em] text-white/35">
                 Authentication
@@ -48,33 +72,15 @@ export default function LoginPage() {
               </h1>
             </div>
 
-            {/* Error */}
-            {errorMessage && (
-              <div className="mb-6 border border-red-400/20 bg-red-400/5 px-4 py-3 text-sm text-red-400 text-center">
-                {errorMessage}
-              </div>
-            )}
+            <Suspense fallback={null}>
+              <LoginContent />
+            </Suspense>
 
-            {/* Steam button */}
-            <a
-              href={`${API_BASE}/auth/steam`}
-              className="group flex w-full items-center justify-center gap-3 border border-white/15 bg-white/[0.04] px-8 py-4 backdrop-blur-sm transition-all hover:border-white/35 hover:bg-white/[0.08]"
-            >
-              <span className="text-[#4c9be8] transition-colors group-hover:text-[#71b8ff]">
-                {STEAM_SVG}
-              </span>
-              <span className="font-display text-sm uppercase tracking-[0.35em] text-white/80 group-hover:text-white">
-                Continue with Steam
-              </span>
-            </a>
-
-            {/* Explainer */}
             <p className="mt-5 text-center text-[11px] leading-relaxed text-white/30">
               We only read your Steam public profile to display your name.
               No password is stored — authentication is handled entirely by Steam.
             </p>
 
-            {/* Divider */}
             <div className="mt-10 border-t border-white/[0.06]" />
 
             <p className="mt-6 text-center text-[10px] text-white/20">

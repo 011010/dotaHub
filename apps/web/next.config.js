@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
+const path = require('path')
+
 const nextConfig = {
+  output: 'standalone',
   experimental: {
     typedRoutes: true,
+    outputFileTracingRoot: path.join(__dirname, '../../'),
   },
 }
 
