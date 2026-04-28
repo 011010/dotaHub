@@ -9,7 +9,8 @@ export default async function authRoutes(app: FastifyInstance) {
   // ── GET /auth/steam ─────────────────────────────────────────────────────────
   // Redirects the user to Steam's OpenID login page
   app.get('/steam', async (req, reply) => {
-    const apiBase  = `${req.protocol}://${req.hostname}:${process.env.PORT ?? 3001}`
+    const host     = req.headers['host'] ?? `localhost:${process.env.PORT ?? 3001}`
+    const apiBase  = `${req.protocol}://${host}`
     const returnTo = `${apiBase}/auth/steam/callback`
     return reply.redirect(buildSteamOpenIdUrl(returnTo, apiBase))
   })
