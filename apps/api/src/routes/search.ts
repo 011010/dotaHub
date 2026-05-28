@@ -53,6 +53,12 @@ export default async function searchRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: 'steamId or name is required' })
     }
 
+    // resolvedSteamId must be set here — all branches above either assign or return
+    if (typeof resolvedSteamId! !== 'bigint') {
+      logger.error({ name, steamId, resolvedSteamId }, 'resolvedSteamId not assigned — this is a bug')
+      return reply.status(500).send({ error: 'Internal error resolving Steam ID' })
+    }
+
     const where = { event: { playerSteamId: resolvedSteamId } }
 
     const [rawClips, total] = await Promise.all([
