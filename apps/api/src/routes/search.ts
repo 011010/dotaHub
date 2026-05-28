@@ -1,48 +1,73 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '@dota-replay/db'
-import type { SearchParams } from '@dota-replay/types'
+import { OpenDotaClient } from '@dota-replay/dota-api'
+import type { SearchParams, ClipSearchResult } from '@dota-replay/types'
+
+const STEAM_ID_OFFSET = 76561197960265728n
 
 export default async function searchRoutes(app: FastifyInstance) {
   app.get('/', async (request, reply) => {
-    const { steamId, page = '1', limit = '20' } = request.query as SearchParams
-    
-    const pageNum = parseInt(page as string, 10)
+    const { steamId, name, page = '1', limit = '20' } = request.query as SearchParams
+
+    const pageNum  = parseInt(page as string, 10)
     const limitNum = parseInt(limit as string, 10)
-    const offset = (pageNum - 1) * limitNum
+    const offset   = (pageNum - 1) * limitNum
 
-    const clips = await db.clip.findMany({
-      where: {
-        event: {
-          playerSteamId: BigInt(steamId),
-        },
-      },
-      take: limitNum,
-      skip: offset,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        event: {
-          include: { match: true },
-        },
-        streamer: true,
-      },
-    })
+    let resolvedSteamId: bigint
+    let resolvedDisplayName: string | undefined
 
-    const total = await db.clip.count({
-      where: {
-        event: {
-          playerSteamId: BigInt(steamId),
-        },
-      },
-    })
+    if (name) {
+      const opendota = new OpenDotaClient()
+      const results  = await opendota.searchPlayers(name)
+      if (!results.length) {
+        return {
+          clips: [],
+          pagination: { page: pageNum, limit: limitNum, total: 0, hasMore: false },
+          resolvedDisplayName: name,
+        }
+      }
+      const top           = results[0]
+      resolvedSteamId     = BigInt(top.account_id) + STEAM_ID_OFFSET
+      resolvedDisplayName = top.personaname
+    } else if (steamId) {
+      resolvedSteamId = BigInt(steamId)
+    } else {
+      return reply.status(400).send({ error: 'steamId or name is required' })
+    }
+
+    const where = { event: { playerSteamId: resolvedSteamId } }
+
+    const [rawClips, total] = await Promise.all([
+      db.clip.findMany({
+        where,
+        take: limitNum,
+        skip: offset,
+        orderBy: { createdAt: 'desc' },
+        include: { event: { include: { match: true } }, streamer: true },
+      }),
+      db.clip.count({ where }),
+    ])
+
+    const clips: ClipSearchResult[] = rawClips.map(clip => ({
+      clipId:       clip.id,
+      eventId:      clip.eventId,
+      eventType:    clip.event.eventType,
+      gameTimeSec:  clip.event.gameTimeSec,
+      platform:     clip.platform,
+      clipUrl:      clip.clipUrl,
+      embedUrl:     clip.embedUrl ?? undefined,
+      thumbnailUrl: clip.thumbnailUrl ?? undefined,
+      streamerName: clip.streamer.displayName ?? undefined,
+      matchId:      clip.event.matchId.toString(),
+      heroId:       clip.event.heroId ?? undefined,
+      createdAt:    clip.createdAt,
+    }))
 
     return {
       clips,
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total,
-        hasMore: offset + limitNum < total,
-      },
+      pagination: { page: pageNum, limit: limitNum, total, hasMore: offset + limitNum < total },
+      resolvedSteamId: resolvedSteamId.toString(),
+      resolvedDisplayName,
     }
   })
 }

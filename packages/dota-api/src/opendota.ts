@@ -33,4 +33,8 @@ export class OpenDotaClient extends BaseApiClient {
   async getProPlayers(): Promise<Array<{ account_id: number; name: string }>> {
     return this.request('/proPlayers')
   }
+
+  async searchPlayers(query: string): Promise<Array<{ account_id: number; personaname: string; avatarfull: string; similarity: number }>> {
+    return this.request(`/search?q=${encodeURIComponent(query)}`)
+  }
 }

@@ -15,9 +15,10 @@ export interface PaginatedResponse<T> {
 }
 
 export interface SearchParams {
-  steamId: string
-  page?: number
-  limit?: number
+  steamId?: string
+  name?: string
+  page?: string | number
+  limit?: string | number
 }
 
 export interface ClipSearchResult {
@@ -30,7 +31,7 @@ export interface ClipSearchResult {
   embedUrl?: string
   thumbnailUrl?: string
   streamerName?: string
-  matchId: bigint
+  matchId: string
   heroId?: number
   createdAt: Date
 }

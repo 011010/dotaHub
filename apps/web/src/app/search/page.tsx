@@ -152,15 +152,16 @@ function EmptyPrompt() {
   )
 }
 
-function NoResults({ steamId }: { steamId: string }) {
+function NoResults({ label, isName }: { label: string; isName: boolean }) {
   return (
     <div className="flex flex-col items-center gap-4 py-16 text-center">
       <div className="font-display text-[10px] uppercase tracking-[0.5em] text-white/30">
         No clips found
       </div>
       <p className="max-w-sm text-sm text-white/40">
-        No clips found for Steam ID{' '}
-        <span className="font-mono text-white/60">{steamId}</span>. Try a different ID or check back later as new matches are indexed.
+        No clips found for {isName ? 'player ' : 'Steam ID '}
+        <span className={isName ? 'text-white/60' : 'font-mono text-white/60'}>{label}</span>
+        . Try a different {isName ? 'name' : 'ID'} or check back later as new matches are indexed.
       </p>
     </div>
   )
@@ -173,36 +174,45 @@ type SearchState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | {
-      status:      'done'
-      clips:       ClipSearchResult[]
-      total:       number
-      steamId:     string
-      page:        number
-      hasMore:     boolean
-      loadingMore: boolean
+      status:              'done'
+      clips:               ClipSearchResult[]
+      total:               number
+      query:               string   // original user input
+      resolvedSteamId:     string   // always the Steam64 ID (for pagination)
+      resolvedDisplayName: string   // name to show in results (display name or Steam ID)
+      isNameSearch:        boolean
+      page:                number
+      hasMore:             boolean
+      loadingMore:         boolean
     }
 
 export default function SearchPage() {
-  const [steamId, setSteamId] = useState('')
-  const [state, setState]     = useState<SearchState>({ status: 'idle' })
-  const inputRef              = useRef<HTMLInputElement>(null)
+  const [query, setQuery]   = useState('')
+  const [state, setState]   = useState<SearchState>({ status: 'idle' })
+  const inputRef            = useRef<HTMLInputElement>(null)
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    const id = steamId.trim()
-    if (!id) { inputRef.current?.focus(); return }
+    const q = query.trim()
+    if (!q) { inputRef.current?.focus(); return }
 
     setState({ status: 'loading' })
     try {
-      const data = await api.search.bySteamId(id, 1, PAGE_SIZE)
+      const isId   = /^\d+$/.test(q)
+      const data   = isId ? await api.search.bySteamId(q, 1, PAGE_SIZE) : await api.search.byName(q, 1, PAGE_SIZE)
+      const steamId = data.resolvedSteamId ?? q
+      const name    = data.resolvedDisplayName ?? (isId ? q : q)
       setState({
-        status:      'done',
-        clips:       data.clips,
-        total:       data.pagination.total,
-        steamId:     id,
-        page:        1,
-        hasMore:     data.pagination.hasMore,
-        loadingMore: false,
+        status:              'done',
+        clips:               data.clips,
+        total:               data.pagination.total,
+        query:               q,
+        resolvedSteamId:     steamId,
+        resolvedDisplayName: name,
+        isNameSearch:        !isId,
+        page:                1,
+        hasMore:             data.pagination.hasMore,
+        loadingMore:         false,
       })
     } catch (err) {
       setState({ status: 'error', message: err instanceof Error ? err.message : 'Search failed' })
@@ -216,7 +226,7 @@ export default function SearchPage() {
 
     try {
       const nextPage = state.page + 1
-      const data     = await api.search.bySteamId(state.steamId, nextPage, PAGE_SIZE)
+      const data     = await api.search.bySteamId(state.resolvedSteamId, nextPage, PAGE_SIZE)
       setState(s =>
         s.status === 'done'
           ? {
@@ -272,10 +282,10 @@ export default function SearchPage() {
               <input
                 ref={inputRef}
                 type="text"
-                value={steamId}
-                onChange={(e) => setSteamId(e.target.value)}
-                placeholder="Steam ID — e.g. 76561197960287930"
-                className="flex-1 border border-white/15 bg-white/[0.04] px-5 py-4 font-mono text-sm text-white/90 placeholder-white/25 backdrop-blur-sm transition-colors focus:border-white/35 focus:outline-none"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Username or Steam ID — e.g. Miracle-"
+                className="flex-1 border border-white/15 bg-white/[0.04] px-5 py-4 text-sm text-white/90 placeholder-white/25 backdrop-blur-sm transition-colors focus:border-white/35 focus:outline-none"
               />
               <button
                 type="submit"
@@ -291,7 +301,7 @@ export default function SearchPage() {
               </button>
             </div>
             <p className="mt-2 text-[10px] text-white/25">
-              Enter your Steam64 ID or 32-bit account ID
+              Enter your display name or Steam64 ID
             </p>
           </form>
 
@@ -311,7 +321,9 @@ export default function SearchPage() {
                   <span className="text-white/30"> of {state.total}</span>
                 )}{' '}
                 clip{state.total !== 1 ? 's' : ''} found for{' '}
-                <span className="font-mono text-white/70">{state.steamId}</span>
+                <span className={state.isNameSearch ? 'text-white/70' : 'font-mono text-white/70'}>
+                  {state.resolvedDisplayName}
+                </span>
               </p>
               <Link
                 href="/"
@@ -324,7 +336,9 @@ export default function SearchPage() {
 
           {/* States */}
           {state.status === 'idle' && <EmptyPrompt />}
-          {isEmpty && <NoResults steamId={state.steamId} />}
+          {isEmpty && state.status === 'done' && (
+            <NoResults label={state.resolvedDisplayName} isName={state.isNameSearch} />
+          )}
 
           {/* Results grid */}
           {hasResults && state.status === 'done' && (

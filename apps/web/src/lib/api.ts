@@ -2,6 +2,13 @@ import type { ClipSearchResult, StreamerData } from '@dota-replay/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
+type SearchResponse = {
+  clips: ClipSearchResult[]
+  pagination: { total: number; hasMore: boolean }
+  resolvedSteamId?: string
+  resolvedDisplayName?: string
+}
+
 export async function apiFetch<T>(endpoint: string, options?: RequestInit, timeoutMs = 8000): Promise<T> {
   const url        = `${API_BASE}${endpoint}`
   const controller = new AbortController()
@@ -34,9 +41,9 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit, timeo
 export const api = {
   search: {
     bySteamId: (steamId: string, page = 1, limit = 20) =>
-      apiFetch<{ clips: ClipSearchResult[]; pagination: { total: number; hasMore: boolean } }>(
-        `/search?steamId=${steamId}&page=${page}&limit=${limit}`
-      ),
+      apiFetch<SearchResponse>(`/search?steamId=${encodeURIComponent(steamId)}&page=${page}&limit=${limit}`),
+    byName: (name: string, page = 1, limit = 20) =>
+      apiFetch<SearchResponse>(`/search?name=${encodeURIComponent(name)}&page=${page}&limit=${limit}`),
   },
   matches: {
     recent: (limit = 20, offset = 0) =>
