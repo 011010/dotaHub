@@ -41,9 +41,9 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit, timeo
 export const api = {
   search: {
     bySteamId: (steamId: string, page = 1, limit = 20) =>
-      apiFetch<SearchResponse>(`/search?steamId=${encodeURIComponent(steamId)}&page=${page}&limit=${limit}`),
+      apiFetch<SearchResponse>(`/search?steamId=${encodeURIComponent(steamId)}&page=${page}&limit=${limit}`, undefined, 15000),
     byName: (name: string, page = 1, limit = 20) =>
-      apiFetch<SearchResponse>(`/search?name=${encodeURIComponent(name)}&page=${page}&limit=${limit}`),
+      apiFetch<SearchResponse>(`/search?name=${encodeURIComponent(name)}&page=${page}&limit=${limit}`, undefined, 15000),
   },
   matches: {
     recent: (limit = 20, offset = 0) =>

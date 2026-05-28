@@ -19,7 +19,7 @@ export default async function searchRoutes(app: FastifyInstance) {
 
     if (name) {
       try {
-        const opendota    = new OpenDotaClient()
+        const opendota    = new OpenDotaClient({ timeout: 5000 })
         const results     = await opendota.searchPlayers(name)
         const withAccount = Array.isArray(results)
           ? results.filter(r => r.account_id != null && r.account_id > 0)
