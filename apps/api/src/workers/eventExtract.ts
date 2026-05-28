@@ -10,6 +10,10 @@ const openDota = new OpenDotaClient({
   apiKey: process.env.OPENDOTA_API_KEY,
 })
 
+// OpenDota returns 32-bit account IDs; the DB stores Steam64 IDs
+const STEAM_ID_OFFSET = 76561197960265728n
+const toSteam64 = (accountId: number) => BigInt(accountId) + STEAM_ID_OFFSET
+
 export interface EventExtractJobData {
   matchId: string  // BigInt serialized as string
 }
@@ -51,7 +55,7 @@ function detectFromObjectives(
         events.push({
           eventType:     EVENT_TYPES.FIRST_BLOOD,
           gameTimeSec:   obj.time,
-          playerSteamId: BigInt(player.account_id),
+          playerSteamId: toSteam64(player.account_id),
           heroId:        player.hero_id,
           context:       { objectiveType: obj.type },
         })
@@ -63,7 +67,7 @@ function detectFromObjectives(
         events.push({
           eventType:     EVENT_TYPES.AEGIS_STEAL,
           gameTimeSec:   obj.time,
-          playerSteamId: BigInt(player.account_id),
+          playerSteamId: toSteam64(player.account_id),
           heroId:        player.hero_id,
           context:       { unit: obj.unit },
         })
@@ -78,7 +82,7 @@ function detectFromObjectives(
         events.push({
           eventType:     EVENT_TYPES.MEGA_CREEPS_WIN,
           gameTimeSec:   obj.time,
-          playerSteamId: BigInt(winner.account_id),
+          playerSteamId: toSteam64(winner.account_id),
           heroId:        winner.hero_id,
           context:       { team: obj.team },
         })
@@ -91,7 +95,7 @@ function detectFromObjectives(
         events.push({
           eventType:     EVENT_TYPES.COURIER_SNIPE,
           gameTimeSec:   obj.time,
-          playerSteamId: BigInt(player.account_id),
+          playerSteamId: toSteam64(player.account_id),
           heroId:        player.hero_id,
           context:       { unit: obj.unit },
         })
@@ -126,7 +130,7 @@ function detectKillStreaks(players: OpenDotaPlayer[]): DetectedEvent[] {
       events.push({
         eventType,
         gameTimeSec:   killTime,
-        playerSteamId: BigInt(player.account_id),
+        playerSteamId: toSteam64(player.account_id),
         heroId:        player.hero_id,
         context:       { killStreak: count, occurrences },
       })
@@ -159,7 +163,7 @@ function detectComebacks(match: OpenDotaMatchFull, players: OpenDotaPlayer[]): D
   events.push({
     eventType:     EVENT_TYPES.COMEBACK,
     gameTimeSec:   match.duration,
-    playerSteamId: BigInt(carryPlayer.account_id),
+    playerSteamId: toSteam64(carryPlayer.account_id),
     heroId:        carryPlayer.hero_id,
     context:       { peakDeficit: Math.max(...adv.map(Math.abs)) },
   })
@@ -185,7 +189,7 @@ function detectTeamWipes(match: OpenDotaMatchFull, players: OpenDotaPlayer[]): D
     events.push({
       eventType:     EVENT_TYPES.TEAM_WIPE,
       gameTimeSec:   fight.start,
-      playerSteamId: BigInt(wiper.account_id),
+      playerSteamId: toSteam64(wiper.account_id),
       heroId:        wiper.hero_id,
       context:       { radiantDeaths, direDeaths, fightDuration: fight.end - fight.start },
     })
@@ -210,7 +214,7 @@ export async function processEventExtract(job: Job<EventExtractJobData>): Promis
   // Get all known streamers; find which ones were in this match
   const streamerIds = players
     .filter(p => p.account_id)
-    .map(p => BigInt(p.account_id))
+    .map(p => toSteam64(p.account_id))
 
   const streamers = await db.streamer.findMany({
     where: { steamAccountId: { in: streamerIds } },
