@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { db } from '@dota-replay/db'
 import { OpenDotaClient } from '@dota-replay/dota-api'
 import type { SearchParams, ClipSearchResult } from '@dota-replay/types'
+import { logger } from '../lib/logger'
 
 const STEAM_ID_OFFSET = 76561197960265728n
 
@@ -17,21 +18,37 @@ export default async function searchRoutes(app: FastifyInstance) {
     let resolvedDisplayName: string | undefined
 
     if (name) {
-      const opendota = new OpenDotaClient()
-      const results      = await opendota.searchPlayers(name)
-      const withAccount  = results.filter(r => r.account_id != null)
-      if (!withAccount.length) {
+      try {
+        const opendota    = new OpenDotaClient()
+        const results     = await opendota.searchPlayers(name)
+        const withAccount = Array.isArray(results)
+          ? results.filter(r => r.account_id != null && r.account_id > 0)
+          : []
+
+        if (!withAccount.length) {
+          return {
+            clips: [],
+            pagination: { page: pageNum, limit: limitNum, total: 0, hasMore: false },
+            resolvedDisplayName: name,
+          }
+        }
+        const top           = withAccount[0]
+        resolvedSteamId     = BigInt(top.account_id) + STEAM_ID_OFFSET
+        resolvedDisplayName = top.personaname
+      } catch (err) {
+        logger.warn({ err, name }, 'OpenDota player search failed, returning empty results')
         return {
           clips: [],
           pagination: { page: pageNum, limit: limitNum, total: 0, hasMore: false },
           resolvedDisplayName: name,
         }
       }
-      const top           = withAccount[0]
-      resolvedSteamId     = BigInt(top.account_id) + STEAM_ID_OFFSET
-      resolvedDisplayName = top.personaname
     } else if (steamId) {
-      resolvedSteamId = BigInt(steamId)
+      try {
+        resolvedSteamId = BigInt(steamId)
+      } catch {
+        return reply.status(400).send({ error: 'Invalid steamId format' })
+      }
     } else {
       return reply.status(400).send({ error: 'steamId or name is required' })
     }
