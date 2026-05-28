@@ -156,4 +156,16 @@ describe('GET /search?name=', () => {
     expect(body.resolvedDisplayName).toBe('unknownXYZ999')
     expect(body.pagination.total).toBe(0)
   })
+
+  it('skips anonymous results (null account_id) and returns empty when all results are anonymous', async () => {
+    mockSearchPlayers.mockResolvedValue([
+      { account_id: null, personaname: 'Anonymous', avatarfull: '', similarity: 0.9 },
+    ])
+
+    const res = await app.inject({ method: 'GET', url: '/search?name=Anonymous' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.clips).toEqual([])
+    expect(body.resolvedDisplayName).toBe('Anonymous')
+  })
 })

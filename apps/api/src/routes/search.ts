@@ -18,15 +18,16 @@ export default async function searchRoutes(app: FastifyInstance) {
 
     if (name) {
       const opendota = new OpenDotaClient()
-      const results  = await opendota.searchPlayers(name)
-      if (!results.length) {
+      const results      = await opendota.searchPlayers(name)
+      const withAccount  = results.filter(r => r.account_id != null)
+      if (!withAccount.length) {
         return {
           clips: [],
           pagination: { page: pageNum, limit: limitNum, total: 0, hasMore: false },
           resolvedDisplayName: name,
         }
       }
-      const top           = results[0]
+      const top           = withAccount[0]
       resolvedSteamId     = BigInt(top.account_id) + STEAM_ID_OFFSET
       resolvedDisplayName = top.personaname
     } else if (steamId) {
